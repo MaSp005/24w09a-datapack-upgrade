@@ -354,6 +354,12 @@ module.exports = {
         return { ...rest, enchantment_glint_override: true };
       }
     }
+    // TODO: Area Effect Clouds now store potions in the same format as the minecraft:potion_contents component in a potion_contents field:
+    /*
+      Potion -> potion_contents.potion
+      Color -> potion_contents.custom_color
+      effects -> potion_contents.custom_effects
+    */
   ]
 }
 
