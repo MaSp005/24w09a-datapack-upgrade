@@ -1,3 +1,4 @@
+const { stringToObject, findPairedBracket } = require("./utils");
 const changes = require("./changes");
 
 function line(line) {
