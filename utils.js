@@ -1,20 +1,35 @@
 function stringToObject(str) {
-  console.log(str);
   let obj = {};
   let i = 0;
   while (true) {
     let nextequal = i + str.slice(i).indexOf("=");
     let property = str.substring(i, nextequal);
-    let nextcomma = (/[\[\{\(]/.test(str.charAt(nextequal + 1))) ?
-      (findPairedBracket(str, nextequal + 1) - nextequal + 1) :
+    let nextcomma = ("[{(".includes(str.charAt(nextequal + 1))) ?
+      (findPairedBracket(str, nextequal + 1) + 2) :
       (str.slice(nextequal).includes(",") ?
         str.slice(nextequal).indexOf(",") + nextequal :
         str.length);
     i = nextcomma + 1;
     let value = str.substring(nextequal + 1, nextcomma);
-    console.log(nextequal, property, nextcomma, value, i);
     obj[property] = value;
-    if (str.charAt(nextcomma) == "" || str.charAt(nextcomma + 1) == "") break;
+    if (nextcomma >= str.length) break;
+  }
+  return obj;
+}
+
+function stringToArray(str) {
+  let obj = [];
+  let i = 0;
+  while (true) {
+    let nextcomma = ("[{(".includes(str.charAt(i))) ?
+      (findPairedBracket(str, i) + 2) :
+      (str.slice(i).includes(",") ?
+        str.slice(i).indexOf(",") + i :
+        str.length);
+    let value = str.substring(i, nextcomma);
+    obj.push(value);
+    i = nextcomma + 1;
+    if (nextcomma >= str.length) break;
   }
   return obj;
 }
@@ -55,19 +70,16 @@ function removeNullProperties(obj) {
 };
 
 function findPairedBracket(str, index) {
-  console.log("---")
-  console.log(str)
   let brackets = 0, i;
   for (i = index; i < str.length; i++) {
-    if (/[\[\{\(]/.test(str.charAt(i))) brackets++;
-    if (/[\]\}\)]/.test(str.charAt(i))) {
-      if (!brackets) break;
+    // TODO: account for brackets in quotations (interpreted literally)
+    if ("[{(".includes(str.charAt(i))) brackets++;
+    if ("]})".includes(str.charAt(i))) {
       brackets--;
+      if (!brackets) break;
     }
   }
-  console.log(i, str.slice(index, i - index - 1));
-  console.log("---")
   return i - 1;
 }
 
-module.exports = { stringToObject, convertPredicate, removeNullProperties, findPairedBracket };
+module.exports = { stringToObject, stringToArray, convertPredicate, removeNullProperties, findPairedBracket };

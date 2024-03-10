@@ -310,8 +310,17 @@ module.exports = {
       }
     },
     {
+      priority: 1, // after everything else
+      qualify: obj => obj.Count,
+      modify: obj => {
+        let { Count, ...rest } = obj;
+        if (Count != "1b") rest.count = Count.slice(0, -1);
+        return rest;
+      }
+    },
+    {
       priority: -1, // before anything else
-      qualify: obj => JSON.stringify(obj.Enchantments) == "[{}]",
+      qualify: obj => obj.Enchantments == "[{}]",
       modify: obj => {
         let { Enchantments, ...rest } = obj;
         return { ...rest, enchantment_glint_override: true };

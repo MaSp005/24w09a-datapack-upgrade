@@ -9,3 +9,5 @@ Upgrades datapacks to the new NBT format.
 `upgrade.js` upgrades individual commands or functions to the new format. (basically applies `changes.js`)
 
 `index.js` handles unzipping, upgrading and rezipping datapacks.
+
+`utils.js` holds utility functions for use throughout the other files.

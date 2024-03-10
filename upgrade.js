@@ -6,11 +6,24 @@ function line(line) {
   // EXCEPT: placed banners (blocks) also change their format on patterns
   if (!line.trim()) return "";
   if (line.startsWith("#")) return line;
-  // TODO: identify components, extract data, reformat
+  // TODO: identify components, extract data, apply changes, reformat
+
+  // SELECTOR COMPONENT
+  let startsearch = 0;
+  while (true) {
+    let index = line.slice(startsearch).search(/@[aespr]\[/);
+    if (index == -1) break;
+    index += startsearch;
+    let end = startsearch = findPairedBracket(line, index + 2) + 1;
+    let str = line.substring(index + 3, end);
+    let obj = stringToObject(str);
+    if (obj.nbt) console.log(obj.nbt);
+    // console.log(index, end, str, obj);
+  }
 
   // Extract component data
   /*
-    Relevant commands: 
+    Relevant commands:
       summon <entity> <xyz> ENTITYDATA
     SELECTOR: @?[nbt=ENTITYDATA]
     ENTITYDATA: {
@@ -34,7 +47,7 @@ function line(line) {
     BLOCKDATA: {
       Patterns (banners): convert to new format,
       Items (containers): [ITEM...]
-      item (pots): ITEM
+      item (decorated pots): ITEM
     }
     and an ITEM can be a container and thus have BLOCKDATA... recursive items lol
     this is gonna be fun
