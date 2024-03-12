@@ -1,8 +1,9 @@
 function stringToObject(str) {
   let obj = {};
   let i = 0;
+  let propertySplitter = str.charAt(Math.min(str.indexOf("="), str.indexOf(":")));
   while (true) {
-    let nextequal = i + str.slice(i).indexOf("=");
+    let nextequal = i + str.slice(i).indexOf(propertySplitter);
     let property = str.substring(i, nextequal);
     let nextcomma = ("[{(".includes(str.charAt(nextequal + 1))) ?
       (findPairedBracket(str, nextequal + 1) + 2) :
@@ -14,6 +15,7 @@ function stringToObject(str) {
     obj[property] = value;
     if (nextcomma >= str.length) break;
   }
+  obj[Symbol("pSplit")] = propertySplitter;
   return obj;
 }
 
@@ -33,6 +35,9 @@ function stringToArray(str) {
   }
   return obj;
 }
+
+const objectToString = obj => Object.keys(obj).map(k => k + "=" + obj[k]).join(obj[Symbol("pSplit")]);
+const arrayToString = arr => arr.join(",");
 
 function convertPredicate(str) {
   if (typeof str != "string") return str;
@@ -82,4 +87,4 @@ function findPairedBracket(str, index) {
   return i - 1;
 }
 
-module.exports = { stringToObject, stringToArray, convertPredicate, removeNullProperties, findPairedBracket };
+module.exports = { stringToObject, stringToArray, objectToString, arrayToString, convertPredicate, removeNullProperties, findPairedBracket };

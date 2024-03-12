@@ -314,7 +314,7 @@ module.exports = {
       qualify: obj => obj.Count,
       modify: obj => {
         let { Count, ...rest } = obj;
-        if (Count != "1b") rest.count = Count.slice(0, -1);
+        if (Count != "1b") rest.count = Count.replace("b", "");
         return rest;
       }
     },
