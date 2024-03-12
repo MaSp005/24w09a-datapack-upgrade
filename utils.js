@@ -1,7 +1,10 @@
+const getPropSplit = str => str.charAt(Math.min(...[str.indexOf("="), str.indexOf(":")].filter(x => x != -1)));
+
 function stringToObject(str) {
+  if (!str.length) return {};
   let obj = {};
   let i = 0;
-  let propertySplitter = str.charAt(Math.min(str.indexOf("="), str.indexOf(":")));
+  let propertySplitter = getPropSplit(str);
   while (true) {
     let nextequal = i + str.slice(i).indexOf(propertySplitter);
     let property = str.substring(i, nextequal);
@@ -87,4 +90,6 @@ function findPairedBracket(str, index) {
   return i - 1;
 }
 
-module.exports = { stringToObject, stringToArray, objectToString, arrayToString, convertPredicate, removeNullProperties, findPairedBracket };
+const replaceRange = (str, start, end, replacement) => str.slice(0, start) + replacement + str.slice(end);
+
+module.exports = { stringToObject, stringToArray, objectToString, arrayToString, convertPredicate, removeNullProperties, findPairedBracket, replaceRange };
