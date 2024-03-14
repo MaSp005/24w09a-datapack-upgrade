@@ -96,6 +96,12 @@ function upgradeEntityData(obj) {
   // ShoulderEntityRight: ENTITYDATA
   if (obj.ShoulderEntityRight) obj.ShoulderEntityRight = generalUpgrade(obj.ShoulderEntityRight, upgradeEntityData);
   return obj;
+  // TODO: Area Effect Clouds now store potions in the same format as the minecraft:potion_contents component in a potion_contents field:
+  /*
+    Potion -> potion_contents.potion
+    Color -> potion_contents.custom_color
+    effects -> potion_contents.custom_effects
+  */
 }
 
 function line(line) {
@@ -125,7 +131,13 @@ function line(line) {
 
   // COMMANDS
   line = line.replaceAll("run execute ", ""); // if anyone actually does this imma find you
-  // TODO: check for execute
+  let executepart;
+  if (line.startsWith("execute")) {
+    // TODO: check for embedded execute
+    let startofcommand = line.indexOf(" run ") + 5
+    executepart = line.slice(0, startofcommand);
+    line = line.slice(0, startofcommand);
+  }
   if (line.startsWith("clear")) {
     let endofselector = // note: "clear ".length == 7
       selectors.includes(7) ? // if selector is conditional
@@ -153,6 +165,7 @@ function line(line) {
       line = replaceRange(line, datastart, end, nstr);
     }
   }
+  line = executepart + line;
 
   return line;
   // Extract component data

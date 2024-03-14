@@ -78,13 +78,21 @@ function removeNullProperties(obj) {
 };
 
 function findPairedBracket(str, index) {
-  let brackets = 0, i;
+  let brackets = 0, i, inquotes = false;
   for (i = index; i < str.length; i++) {
-    // TODO: account for brackets in quotations (interpreted literally)
-    if ("[{(".includes(str.charAt(i))) brackets++;
-    if ("]})".includes(str.charAt(i))) {
-      brackets--;
-      if (!brackets) break;
+    if (str.charAt(i) == '"') {
+      let c;
+      for (c = 0; i - c > 0; c++) {
+        if (str[i - c - 1] != '\\') break;
+      }
+      if (c % 2 == 0) inquotes = !inquotes;
+    }
+    if (!inquotes) {
+      if ("[{(".includes(str.charAt(i))) brackets++;
+      if ("]})".includes(str.charAt(i))) {
+        brackets--;
+        if (!brackets) break;
+      }
     }
   }
   return i - 1;

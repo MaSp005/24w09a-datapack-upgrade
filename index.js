@@ -3,7 +3,13 @@ const path = require("path"),
   fs = require("fs"),
   WORKSPACE = path.join(__dirname, "_workspace");
 
-const upgradefunc = require("./upgrade");
+const upgrade = require("./upgrade");
+
+// this is my testing suite now i guess...
+const line = `clear @a[name=" test \\" i need {{{])(((to concentrate \\") "] diamond_sword{Count:1b}`;
+console.log(upgrade.line(line))
+
+process.exit();
 
 const flags = require('args')
   .option('input', 'Input path of .zip file')
