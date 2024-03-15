@@ -16,7 +16,12 @@ function upgradeItem(obj) {
 
 function upgradeEffect(obj) {
   // TODO: Upgrade Effects
-  return obj
+  return obj;
+}
+
+function upgradeBlockData(obj) {
+  // TODO: Upgrade Blocks
+  return obj;
 }
 
 function upgradeEntityData(obj) {
@@ -121,7 +126,7 @@ function line(line) {
     let end = findPairedBracket(line, index + 2) + 1;
     let str = line.substring(index + 3, end);
     let obj = stringToObject(str);
-    if (obj.nbt) obj.nbt = upgradeEntityData(obj.nbt);
+    if (obj.nbt) obj.nbt = generalUpgrade(obj.nbt, upgradeEntityData);
     let nstr = objectToString(obj);
     line = replaceRange(line, index + 3, end, nstr);
     startsearch = end + (nstr.length - str.length);
@@ -131,18 +136,19 @@ function line(line) {
 
   // COMMANDS
   line = line.replaceAll("run execute ", ""); // if anyone actually does this imma find you
-  let executepart;
+  let executepart = "";
   if (line.startsWith("execute")) {
     // TODO: check for embedded execute
-    let startofcommand = line.indexOf(" run ") + 5
+    let startofcommand = line.indexOf(" run ") + 5;
     executepart = line.slice(0, startofcommand);
     line = line.slice(0, startofcommand);
   }
-  if (line.startsWith("clear")) {
+  if (line.startsWith("clear") || line.startsWith("give")) {
+    let startofselector = line.indexOf(" ") + 2;
     let endofselector = // note: "clear ".length == 7
-      selectors.includes(7) ? // if selector is conditional
-        selectors[selectors.indexOf(7) + 1] :
-        (line.slice(7).indexOf(" ") + 7);
+      selectors.includes(startofselector) ? // if selector is conditional
+        selectors[selectors.indexOf(startofselector) + 1] :
+        (line.slice(startofselector).indexOf(" ") + startofselector);
     if (line.slice(endofselector).includes("{")) {
       let datastart = line.slice(endofselector).indexOf("{") + endofselector;
       let end = findPairedBracket(line, datastart) + 2;
@@ -164,6 +170,18 @@ function line(line) {
       console.log(str, nstr);
       line = replaceRange(line, datastart, end, nstr);
     }
+  } else if (line.startsWith("data")) {
+    // TODO: data command
+  } else if (line.startsWith("fill") || line.startsWith("setblock")) {
+    let i = 0;
+    for (let c = 0; c <= (line.startsWith("fill") ? 6 : 3); c++) i = line.slice(i).indexOf(" ") + i + 1;
+    let pred = convertPredicate(line.slice(i));
+    console.log(pred);
+    if (pred.nbtobj) pred.nbtobj = upgradeBlockData(pred.nbtobj);
+    let nstr = `${pred.block}[${objectToString(pred.stateobj || {})}]{${objectToString(pred.nbtobj || {})}}`
+    nstr.replaceAll(/\[\]|\{\}/g, "");
+  } else if (line.startsWith("item")) {
+    // TODO: item command
   }
   line = executepart + line;
 

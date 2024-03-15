@@ -18,7 +18,7 @@ function stringToObject(str) {
     obj[property] = value;
     if (nextcomma >= str.length) break;
   }
-  obj[Symbol("pSplit")] = propertySplitter;
+  obj[Symbol.for("pSplit")] = propertySplitter;
   return obj;
 }
 
@@ -39,7 +39,7 @@ function stringToArray(str) {
   return obj;
 }
 
-const objectToString = obj => Object.keys(obj).map(k => k + "=" + obj[k]).join(obj[Symbol("pSplit")]);
+const objectToString = obj => Object.keys(obj).map(k => k + obj[Symbol.for("pSplit")] + obj[k]).join(",");
 const arrayToString = arr => arr.join(",");
 
 function convertPredicate(str) {
@@ -60,7 +60,7 @@ function convertPredicate(str) {
   }
   let stateobj = !statestr ? null : stringToObject(statestr.slice(1, -1));
   let nbtobj = !nbtstr ? null : eval("(" + nbtstr + ")");
-  return { block, nbtstr, nbtobj, stateobj };
+  return { block, nbtobj, stateobj };
 }
 
 function removeNullProperties(obj) {

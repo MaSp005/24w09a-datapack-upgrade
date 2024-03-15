@@ -6,8 +6,8 @@ const path = require("path"),
 const upgrade = require("./upgrade");
 
 // this is my testing suite now i guess...
-const line = `clear @a[name=" test \\" i need {{{])(((to concentrate \\") "] diamond_sword{Count:1b}`;
-console.log(upgrade.line(line))
+const line = `setblock 4 5 6 stone[half=top]`;
+console.log("OUTPUT:", upgrade.line(line));
 
 process.exit();
 
