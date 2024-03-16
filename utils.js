@@ -1,5 +1,12 @@
 const getPropSplit = str => str.charAt(Math.min(...[str.indexOf("="), str.indexOf(":")].filter(x => x != -1)));
 
+const mapObject = (obj, func) => Object.fromEntries(
+  Object.entries(obj).map(([key, value]) => [key, func(value)])
+);
+
+const generalUpgrade = (srcObj, upgradeFunc) => "{" +
+  objectToString(upgradeFunc(stringToObject(srcObj.slice(1, -1)))) + "}";
+
 function stringToObject(str) {
   if (!str.length) return {};
   let obj = {};
@@ -100,4 +107,15 @@ function findPairedBracket(str, index) {
 
 const replaceRange = (str, start, end, replacement) => str.slice(0, start) + replacement + str.slice(end);
 
-module.exports = { stringToObject, stringToArray, objectToString, arrayToString, convertPredicate, removeNullProperties, findPairedBracket, replaceRange };
+module.exports = {
+  stringToObject,
+  mapObject,
+  generalUpgrade,
+  stringToArray,
+  objectToString,
+  arrayToString,
+  convertPredicate,
+  removeNullProperties,
+  findPairedBracket,
+  replaceRange
+};

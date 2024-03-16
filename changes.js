@@ -1,4 +1,15 @@
-const { convertPredicate, removeNullProperties } = require("./utils");
+const {
+  stringToObject,
+  mapObject,
+  generalUpgrade,
+  stringToArray,
+  objectToString,
+  arrayToString,
+  convertPredicate,
+  removeNullProperties,
+  findPairedBracket,
+  replaceRange
+} = require("./utils");
 
 const colors = [
   "white",
@@ -137,13 +148,14 @@ module.exports = {
     {
       tag: "Unbreakable",
       hideflagsbit: 3,
-      replacement: "unbreakable"
+      replacement: "unbreakable",
+      parse: v => v ? {} : null
     },
     {
       tag: "Enchantments",
       hideflagsbit: 2,
       replacement: "enchantments",
-      parse: oldval => {
+      parse: oldval => { // LEGACY: object conversion
         let levels = {};
         JSON.parse(oldval).forEach(o => levels[o.id] = o.lvl);
         return removeNullProperties({ levels });
@@ -153,7 +165,7 @@ module.exports = {
       tag: "StoredEnchantments",
       hideflagsbit: 6,
       replacement: "stored_enchantments",
-      parse: oldval => {
+      parse: oldval => { // LEGACY: object conversion
         let levels = {};
         JSON.parse(oldval).forEach(o => levels[o.id] = o.lvl);
         return removeNullProperties({ levels });
@@ -195,7 +207,7 @@ module.exports = {
     {
       tag: "Decorations",
       replacement: "map_decorations",
-      parse: oldval => removeNullProperties({
+      parse: oldval => removeNullProperties({ // LEGACY: convert list, not singular object
         x: oldval.x,
         z: oldval.x,
         rotation: oldval.rot,
@@ -258,7 +270,7 @@ module.exports = {
     },
     /* {
       tag: "SkullOwner",
-      replacement: "Profile",
+      replacement: "profile",
       parse: oldval => ({
         name: oldval.name,
         id: oldval.id,
@@ -278,11 +290,11 @@ module.exports = {
         color: colors[pat.Color], pattern: patterns[pat.Pattern]
       })))
     },
-    {
-      tag: "BlockEntityTag.Items",
-      replacement: "container",
-      // old: [{Slot:1b,id:"minecraft:end_crystal",Count:1b}]
-    },
+    // {
+    //   tag: "BlockEntityTag.Items",
+    //   replacement: "container",
+    // },
+    // ↑ This will be done seperately in upgrade.js
     {
       tag: "BlockEntityTag.Bees",
       replacement: "bees",
@@ -305,6 +317,8 @@ module.exports = {
       modify: obj => {
         let { HideFlags, ...rest } = obj;
         return { ...rest, hide_additional_tooltip: {} };
+        // We can safely remove HideFlags entirely as all other bits
+        // have been merged into their respective properties already
       }
     },
     {

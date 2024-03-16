@@ -6,7 +6,7 @@ const path = require("path"),
 const upgrade = require("./upgrade");
 
 // this is my testing suite now i guess...
-const line = `setblock 4 5 6 stone[half=top]`;
+const line = `give masp005 test{Count:1b,Enchantments:[{}],Damage:700,map:7b,Unbreakable:1b,HideFlags:127}`;
 console.log("OUTPUT:", upgrade.line(line));
 
 process.exit();

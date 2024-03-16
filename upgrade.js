@@ -2,15 +2,55 @@
 // TODO: what if it's in quotes, and what if it's setting a command block's command...
 // TODO: escaped strings... within escaped strings... within strings... help
 
-const { stringToObject, stringToArray, objectToString, arrayToString, convertPredicate, removeNullProperties, findPairedBracket, replaceRange } = require("./utils");
+const {
+  stringToObject,
+  mapObject,
+  generalUpgrade,
+  stringToArray,
+  objectToString,
+  arrayToString,
+  convertPredicate,
+  removeNullProperties,
+  findPairedBracket,
+  replaceRange
+} = require("./utils");
 const changes = require("./changes");
-
-const generalUpgrade = (srcObj, upgradeFunc) => "{" +
-  objectToString(upgradeFunc(stringToObject(srcObj.slice(1, -1)))) + "}";
 
 function upgradeItem(obj) {
   // TODO: Upgrade Items (The ❤ of the operation)
-  // temporary confirmation to ensure everything calls correctly
+
+  // Special changes before everything else
+  changes.special.filter(c => c.priority < 0).sort((a, b) => a.priority - b.priority)
+    .forEach(c => {
+      if (!c.qualify(obj)) return;
+      obj = c.modify(obj);
+    });
+
+  let objKeys = Object.keys(obj);
+  Object.keys(changes.simple).forEach(key => {
+    if (!objKeys.includes(key)) return;
+    obj[changes.simple[key]] = obj[key];
+    delete obj[key];
+  })
+
+  changes.complex.forEach(c => {
+    if (!c.tag.split(",").find(t => objKeys.includes(t))) return;
+    console.log("apply", c);
+    let affectedTags = c.tag.split(",");
+    let replacement = typeof c.replacement == "function" ?
+      c.replacement(...affectedTags.map(t => obj[t])) :
+      c.replacement;
+    if (affectedTags.length == 1)
+      obj[replacement] = "{" + objectToString(c.parse(...affectedTags.map(t => obj[t]))) + "}";
+    affectedTags.forEach(t => delete obj[t]);
+  })
+
+  // Special changes after everything else
+  changes.special.filter(c => c.priority > 0).sort((a, b) => a.priority - b.priority)
+    .forEach(c => {
+      if (!c.qualify(obj)) return;
+      obj = c.modify(obj);
+    });
   return { ...obj, confirmation: true };
 }
 
@@ -131,7 +171,6 @@ function line(line) {
     line = replaceRange(line, index + 3, end, nstr);
     startsearch = end + (nstr.length - str.length);
     selectors.push(index, end + 1);
-    console.log(index, end, str, obj, nstr);
   }
 
   // COMMANDS
@@ -154,20 +193,17 @@ function line(line) {
       let end = findPairedBracket(line, datastart) + 2;
       let str = line.substring(datastart, end);
       let nstr = generalUpgrade(str, upgradeItem);
-      console.log(str, nstr);
       line = replaceRange(line, datastart, end, nstr);
     }
   } else if (line.startsWith("summon")) {
     let xyseperate = line.slice("summon ".length).indexOf(" ") + "summon ".length;
     let yzseperate = line.slice(xyseperate + 1).indexOf(" ") + xyseperate + 1;
     let start = line.slice(yzseperate + 1).indexOf(" ") + yzseperate + 2;
-    console.log(line.slice(start));
     if (line.slice(start).includes("{")) {
       let datastart = line.slice(start).indexOf("{") + start;
       let end = findPairedBracket(line, datastart) + 2;
       let str = line.substring(datastart, end);
       let nstr = generalUpgrade(str, upgradeEntityData);
-      console.log(str, nstr);
       line = replaceRange(line, datastart, end, nstr);
     }
   } else if (line.startsWith("data")) {
@@ -176,7 +212,6 @@ function line(line) {
     let i = 0;
     for (let c = 0; c <= (line.startsWith("fill") ? 6 : 3); c++) i = line.slice(i).indexOf(" ") + i + 1;
     let pred = convertPredicate(line.slice(i));
-    console.log(pred);
     if (pred.nbtobj) pred.nbtobj = upgradeBlockData(pred.nbtobj);
     let nstr = `${pred.block}[${objectToString(pred.stateobj || {})}]{${objectToString(pred.nbtobj || {})}}`
     nstr.replaceAll(/\[\]|\{\}/g, "");
