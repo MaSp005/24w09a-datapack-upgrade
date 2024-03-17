@@ -9,6 +9,7 @@ const {
   stringToArray,
   objectToString,
   arrayToString,
+  objHasProp,
   convertPredicate,
   removeNullProperties,
   findPairedBracket,
@@ -29,21 +30,23 @@ function upgradeItem(obj) {
   let objKeys = Object.keys(obj);
   Object.keys(changes.simple).forEach(key => {
     if (!objKeys.includes(key)) return;
-    obj[changes.simple[key]] = obj[key];
+    obj[changes.simple[key]] = obj[key].replace(/b/i, "");
     delete obj[key];
-  })
+  });
 
   changes.complex.forEach(c => {
-    if (!c.tag.split(",").find(t => objKeys.includes(t))) return;
+    if (!c.tag.find(t => objHasProp(obj, t))) return;
     console.log("apply", c);
-    let affectedTags = c.tag.split(",");
     let replacement = typeof c.replacement == "function" ?
-      c.replacement(...affectedTags.map(t => obj[t])) :
+      c.replacement(...c.tag.map(t => obj[t])) :
       c.replacement;
-    if (affectedTags.length == 1)
-      obj[replacement] = "{" + objectToString(c.parse(...affectedTags.map(t => obj[t]))) + "}";
-    affectedTags.forEach(t => delete obj[t]);
-  })
+    let newprop = c.parse(...c.tag.map(t => obj[t]));
+    newprop[Symbol.for("pSplit")] = ":";
+    if (c.hideflagsbit && obj.HideFlags & (2 << c.hideflagsbit))
+      newprop = { ...newprop, show_in_tooltip: false };
+    obj[replacement] = "{" + objectToString(newprop) + "}";
+    c.tag.forEach(t => delete obj[t]);
+  });
 
   // Special changes after everything else
   changes.special.filter(c => c.priority > 0).sort((a, b) => a.priority - b.priority)

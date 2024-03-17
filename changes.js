@@ -5,6 +5,7 @@ const {
   stringToArray,
   objectToString,
   arrayToString,
+  objHasProp,
   convertPredicate,
   removeNullProperties,
   findPairedBracket,
@@ -146,54 +147,54 @@ module.exports = {
   },
   complex: [
     {
-      tag: "Unbreakable",
+      tag: ["Unbreakable"],
       hideflagsbit: 3,
       replacement: "unbreakable",
       parse: v => v ? {} : null
     },
     {
-      tag: "Enchantments",
+      tag: ["Enchantments"],
       hideflagsbit: 2,
       replacement: "enchantments",
-      parse: oldval => { // LEGACY: object conversion
+      parse: oldval => { // FIX: object conversion
         let levels = {};
         JSON.parse(oldval).forEach(o => levels[o.id] = o.lvl);
         return removeNullProperties({ levels });
       }
     },
     {
-      tag: "StoredEnchantments",
+      tag: ["StoredEnchantments"],
       hideflagsbit: 6,
       replacement: "stored_enchantments",
-      parse: oldval => { // LEGACY: object conversion
+      parse: oldval => { // FIX: object conversion
         let levels = {};
         JSON.parse(oldval).forEach(o => levels[o.id] = o.lvl);
         return removeNullProperties({ levels });
       }
     },
     {
-      tag: "CanDestroy",
+      tag: ["CanDestroy"],
       hideflagsbit: 4,
       replacement: "can_break",
       parse: oldval => removeNullProperties({ predicates: oldval.map(convertPredicate) })
     },
     {
-      tag: "CanPlaceOn",
+      tag: ["CanPlaceOn"],
       hideflagsbit: 5,
       replacement: "can_place_on",
       parse: oldval => removeNullProperties({ predicates: oldval.map(convertPredicate) })
     },
     {
-      tag: "display.color",
+      tag: ["display.color"],
       hideflagsbit: 7,
       replacement: "dyed_color",
       parse: oldval => removeNullProperties({ rgb: oldval })
     },
     {
-      tag: "AttributeModifiers",
+      tag: ["AttributeModifiers"],
       hideflagsbit: 2,
       replacement: "attribute_modifiers",
-      parse: oldval => removeNullProperties({
+      parse: oldval => removeNullProperties({ // FIX: object conversion
         modifiers: oldval.map(a => ({
           type: a.AttributeName,
           slot: a.Slot,
@@ -205,24 +206,24 @@ module.exports = {
       })
     },
     {
-      tag: "Decorations",
+      tag: ["Decorations"],
       replacement: "map_decorations",
-      parse: oldval => removeNullProperties({ // LEGACY: convert list, not singular object
+      parse: oldval => removeNullProperties({ // FIX: convert list, not singular object
         x: oldval.x,
         z: oldval.x,
         rotation: oldval.rot,
-        type: decorationTypes[oldval.type]
+        type: decorationTypes[oldval.type.replace(/b/i, "")]
       })
     },
     {
-      tag: "Potion,CustomPotionColor,custom_potion_effects",
+      tag: ["Potion","CustomPotionColor","custom_potion_effects"],
       replacement: "potion_contents",
       parse: (potion, cpc, cpe) => removeNullProperties({
         potion, custom_color: cpc, custom_effects: cpe
       })
     },
     {
-      tag: "pages,filtered_pages,title,filtered_title,author,generation,resolved",
+      tag: ["pages","filtered_pages","title","filtered_title","author","generation","resolved"],
       // pages and filtered pages are on both, all others only on written book
       replacement: (_p, _f, a, b, c, d, e, f) => a || b || c || d || e || f ? "written_book_contents" : "writable_book_contents",
       parse: (pages, fpages, title, ftitle, author, gen, res) => removeNullProperties({
@@ -230,23 +231,23 @@ module.exports = {
       })
     },
     {
-      tag: "NoAI,Silent,NoGravity,Glowing,Invulnerable,Health,Age,Variant,HuntingCooldown,BucketVariantTag",
+      tag: ["NoAI","Silent","NoGravity","Glowing","Invulnerable","Health","Age","Variant","HuntingCooldown","BucketVariantTag"],
       replacement: "bucket_entity_data",
       parse: (NoAI, Silent, NoGravity, Glowing, Invulnerable, Health, Age, Variant, HuntingCooldown, BucketVariantTag) => removeNullProperties({
         NoAI, Silent, NoGravity, Glowing, Invulnerable, Health, Age, Variant, HuntingCooldown, BucketVariantTag
       })
     },
     {
-      tag: "LodestonePos,LodestoneDimension,LodestoneTracked",
+      tag: ["LodestonePos","LodestoneDimension","LodestoneTracked"],
       replacement: "lodestone_tracker",
       parse: (pos, dimension, tracked) => removeNullProperties({
         target: { pos, dimension }, tracked
       })
     },
     {
-      tag: "Explosion",
+      tag: ["Explosion"],
       replacement: "firework_explosion",
-      parse: oldval => removeNullProperties({
+      parse: oldval => removeNullProperties({ // FIX: object conversion
         shape: explosionShapes[oldval.Type],
         colors: oldval.Colors,
         fade_colors: oldval.FadeColors,
@@ -255,9 +256,9 @@ module.exports = {
       })
     },
     {
-      tag: "Fireworks",
+      tag: ["Fireworks"],
       replacement: "fireworks",
-      parse: oldval => removeNullProperties({
+      parse: oldval => removeNullProperties({ // FIX: object conversion
         explosions: oldval.Explosions.map(ex => ({
           shape: explosionShapes[ex.Type],
           colors: ex.Colors,
@@ -279,14 +280,14 @@ module.exports = {
     }, */
     // I think this uses the same format again now, moved to simple.
     {
-      tag: "BlockEntityTag.Base",
+      tag: ["BlockEntityTag.Base"],
       replacement: "base_color",
       parse: oldval => colors[oldval]
     },
     {
-      tag: "BlockEntityTag.Patterns",
+      tag: ["BlockEntityTag.Patterns"],
       replacement: "banner_patterns",
-      parse: oldval => removeNullProperties(oldval.map(pat => ({
+      parse: oldval => removeNullProperties(oldval.map(pat => ({ // FIX: object conversion
         color: colors[pat.Color], pattern: patterns[pat.Pattern]
       })))
     },
@@ -296,16 +297,16 @@ module.exports = {
     // },
     // ↑ This will be done seperately in upgrade.js
     {
-      tag: "BlockEntityTag.Bees",
+      tag: ["BlockEntityTag.Bees"],
       replacement: "bees",
-      parse: oldval => removeNullProperties(oldval.map(bee => ({
+      parse: oldval => removeNullProperties(oldval.map(bee => ({ // FIX: object conversion
         entity_data: bee.EntityData,
         ticks_in_hive: bee.TicksInHive,
         min_ticks_in_hive: bee.MinOccupationTicks
       })))
     },
     {
-      tag: "BlockEntityTag.LootTable,BlockEntityTag.LootTableSeed",
+      tag: ["BlockEntityTag.LootTable","BlockEntityTag.LootTableSeed"],
       replacement: "bees",
       parse: (loot_table, seed) => removeNullProperties({ loot_table, seed })
     },

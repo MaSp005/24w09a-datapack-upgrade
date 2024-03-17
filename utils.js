@@ -49,6 +49,17 @@ function stringToArray(str) {
 const objectToString = obj => Object.keys(obj).map(k => k + obj[Symbol.for("pSplit")] + obj[k]).join(",");
 const arrayToString = arr => arr.join(",");
 
+function objHasProp(obj, prop) {
+  if (!prop.includes(".")) return obj[prop];
+  let steps = prop.split(".");
+  for (i = 0; i < steps.length; i++) {
+    if (typeof obj == "string" && obj.startsWith("{")) obj = stringToObject(obj.slice(1, -1));
+    if (!Object.keys(obj).includes(steps[i])) return null;
+    obj = obj[steps[i]];
+  }
+  return obj;
+}
+
 function convertPredicate(str) {
   if (typeof str != "string") return str;
   let startofdata = str.search(/\[|\{/);
@@ -114,6 +125,7 @@ module.exports = {
   stringToArray,
   objectToString,
   arrayToString,
+  objHasProp,
   convertPredicate,
   removeNullProperties,
   findPairedBracket,
