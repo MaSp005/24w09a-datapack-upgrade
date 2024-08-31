@@ -9,7 +9,7 @@ const {
   stringToArray,
   objectToString,
   arrayToString,
-  objHasProp,
+  getObjProp,
   convertPredicate,
   removeNullProperties,
   findPairedBracket,
@@ -21,7 +21,7 @@ function upgradeItem(obj) {
   // TODO: Upgrade Items (The ❤ of the operation)
 
   // Special changes before everything else
-  changes.special.filter(c => c.priority < 0).sort((a, b) => a.priority - b.priority)
+  changes.special.filter(c => c.priority < 0)
     .forEach(c => {
       if (!c.qualify(obj)) return;
       obj = c.modify(obj);
@@ -35,12 +35,12 @@ function upgradeItem(obj) {
   });
 
   changes.complex.forEach(c => {
-    if (!c.tag.find(t => objHasProp(obj, t))) return;
+    if (!c.tag.find(t => getObjProp(obj, t))) return;
     console.log("apply", c);
     let replacement = typeof c.replacement == "function" ?
       c.replacement(...c.tag.map(t => obj[t])) :
       c.replacement;
-    let newprop = c.parse(...c.tag.map(t => obj[t]));
+    let newprop = c.parse(...c.tag.map(t => getObjProp(obj, t)));
     newprop[Symbol.for("pSplit")] = ":";
     if (c.hideflagsbit && obj.HideFlags & (2 << c.hideflagsbit))
       newprop = { ...newprop, show_in_tooltip: false };
@@ -49,7 +49,7 @@ function upgradeItem(obj) {
   });
 
   // Special changes after everything else
-  changes.special.filter(c => c.priority > 0).sort((a, b) => a.priority - b.priority)
+  changes.special.filter(c => c.priority > 0)
     .forEach(c => {
       if (!c.qualify(obj)) return;
       obj = c.modify(obj);

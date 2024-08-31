@@ -5,7 +5,7 @@ const {
   stringToArray,
   objectToString,
   arrayToString,
-  objHasProp,
+  getObjProp,
   convertPredicate,
   removeNullProperties,
   findPairedBracket,
@@ -314,10 +314,11 @@ module.exports = {
   special: [
     {
       priority: 1, // after everything else
-      qualify: obj => obj.HideFlags & (2 << 6),
+      qualify: _ => true,
       modify: obj => {
         let { HideFlags, ...rest } = obj;
-        return { ...rest, hide_additional_tooltip: {} };
+        if (HideFlags & (2 << 6)) return { ...rest, hide_additional_tooltip: {} };
+        return rest;
         // We can safely remove HideFlags entirely as all other bits
         // have been merged into their respective properties already
       }

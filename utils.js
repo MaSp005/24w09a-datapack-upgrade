@@ -49,13 +49,29 @@ function stringToArray(str) {
 const objectToString = obj => Object.keys(obj).map(k => k + obj[Symbol.for("pSplit")] + obj[k]).join(",");
 const arrayToString = arr => arr.join(",");
 
-function objHasProp(obj, prop) {
+function getObjProp(obj, prop) {
   if (!prop.includes(".")) return obj[prop];
   let steps = prop.split(".");
   for (i = 0; i < steps.length; i++) {
     if (typeof obj == "string" && obj.startsWith("{")) obj = stringToObject(obj.slice(1, -1));
     if (!Object.keys(obj).includes(steps[i])) return null;
     obj = obj[steps[i]];
+  }
+  return obj;
+}
+
+function replaceObjProp(obj, prop, replacement) {
+  if (!prop.includes(".")) return { ...obj, [prop]: replacement };
+  let steps = ["", ...prop.split(".")];
+  let evolutions = [obj];
+  for (i = 1; i < steps.length; i++) {
+    if (typeof evolutions[i - 1] == "string" && evolutions[i - 1].startsWith("{"))
+      evolutions[i - 1] = stringToObject(evolutions[i - 1].slice(1, -1));
+    if (!Object.keys(evolutions[i - 1]).includes(steps[i])) return obj;
+    evolutions[i] = evolutions[i - 1][steps[i]];
+  }
+  for (i = steps.length - 1; i > 0; i--) {
+    evolutions[i - 1][steps[i]] = "{" + objectToString(evolutions[i]) + "}";
   }
   return obj;
 }
@@ -125,7 +141,8 @@ module.exports = {
   stringToArray,
   objectToString,
   arrayToString,
-  objHasProp,
+  getObjProp,
+  replaceObjProp,
   convertPredicate,
   removeNullProperties,
   findPairedBracket,
